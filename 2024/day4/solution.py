@@ -92,8 +92,6 @@ def build_left_diagonal(
 def solution_part_one():
     data = read_input("./input.txt")
 
-    # print(data[:1])
-
     N, M = len(data), len(data[0])
     SEARCHED_WORD = "XMAS"
 
@@ -126,16 +124,14 @@ def solution_part_one():
 
 if __name__ == "__main__":
 
-    data = read_input("./sample.txt")
-
-    # print(data[:1])
+    data = read_input("./input.txt")
 
     N, M = len(data), len(data[0])
     SEARCHED_WORD = "MAS"
 
     x_mas_indices_right: list = []
     x_mas_indices_left: list = []
-    count = 0
+
     for i in range(N):
         row = data[i]
         for j in range(M):
