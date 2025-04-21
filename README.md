@@ -8,6 +8,6 @@ I will not use any AI tools to generate code or solutions for the problems.
 
 ## 2024
 
-- Days done: 1, 2, 3, 4, 5, 7
+- Days done: 1, 2, 3, 4, 5, 7, 8
 
 Momentraily, I am not solving the problems in order. I am solving them as I find time and motivation to do so.
