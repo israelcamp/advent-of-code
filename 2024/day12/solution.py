@@ -35,12 +35,22 @@ def calculate_connection(
 
     return area, perimeter
 
+
 def calculate_connection_bulk(
-    data, row: int, col: int, area: int, plant: str, N: int, M: int, done: list, posd: dict, key: str
+    data,
+    row: int,
+    col: int,
+    area: int,
+    plant: str,
+    N: int,
+    M: int,
+    done: list,
+    posd: dict,
+    key: str,
 ):
     if (row, col) in done:
         return 0, 0
-    
+
     if key is None:
         key = (row, col)
         posd[key] = {}
@@ -50,14 +60,13 @@ def calculate_connection_bulk(
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1)]
     plant_dict = {d: False for d in directions}
 
-
     perimeter = 0
     for di, dj in directions:
         next_row, next_col = row + di, col + dj
         if next_row < 0 or next_row >= N or next_col < 0 or next_col >= M:
             perimeter += 1
             continue
-        
+
         connected = data[next_row][next_col] == plant
         plant_dict[(di, dj)] = connected
 
@@ -78,11 +87,9 @@ def calculate_connection_bulk(
 
 
 if __name__ == "__main__":
-    file = "./sample3.txt"
+    file = "./input.txt"
     data = read_input(file)
     N, M = len(data), len(data[0])
-
-    directions = [(-1, 0), (1, 0), (0, 1), (0, -1)]
 
     result = 0
     done = []
@@ -99,17 +106,58 @@ if __name__ == "__main__":
         # break
 
     print(result)
-    
+
+    dirs = [
+        [(-1, 0), (0, 1)],
+        [(0, -1), (1, 0)],
+        [(0, 1), (1, 0)],
+        [(1, 0), (0, 1)],
+    ]  # WILL CHECK UP
+    side_per_region = {}
+    result = 0
     for start, region in posd.items():
 
-        print(start)
-        for point, dirs in region.items():
-            print(point, dirs)
+        keys = list(region.keys())
+        keys = sorted(keys, key=lambda x: N * x[0] + x[1])
+        accounted_for = []
+        sides = 0
+        side_per_region[start] = 0
 
-            # break
+        for point in keys:
+            for current_direction, opposite_direction in dirs:
+                point_dirs = region[point]
 
-        break
+                if (point + current_direction) in accounted_for:
+                    continue
 
-    keys = list(region.keys())
-    keys = sorted(keys, key=lambda x: N * x[0] + x[1])
-    print(keys)
+                if point_dirs[current_direction] is False:
+                    row, col = point
+                    side_per_region[start] += 1
+                    distance = 1
+                    accounted_for.append((row, col) + current_direction)
+                    while True:
+                        next_row = row + opposite_direction[0] * distance
+                        next_col = col + opposite_direction[1] * distance
+                        if (
+                            next_row < 0
+                            or next_row >= N
+                            or next_col < 0
+                            or next_col >= M
+                        ):
+                            break
+                        if (next_row, next_col) not in keys:
+                            break
+                        next_point_dirs = region[(next_row, next_col)]
+
+                        if next_point_dirs[current_direction] is True:
+                            accounted_for.append(
+                                (next_row, next_col) + current_direction
+                            )
+                            break
+
+                        distance += 1
+                        accounted_for.append((next_row, next_col) + current_direction)
+
+        result += len(region) * side_per_region[start]
+
+    print(result)
