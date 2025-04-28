@@ -1,8 +1,5 @@
 from pathlib import Path
-import sys
-
-sys.setrecursionlimit(10000)
-
+from collections import Counter
 
 START = "S"
 END = "E"
@@ -18,7 +15,7 @@ def read_input(file: str) -> list[list[str]]:
     return [list(l) for l in data]
 
 def draw_maze(maze: list[list[str]]) -> str:
-    return "\n".join(["".join([f"{x}" for x in row]) for row in maze])
+    return "\n".join(["".join([f"{x:5}" for x in row]) for row in maze])
 
 def find_start(maze, match) -> tuple[int, int]:
     for i in range(len(maze)):
@@ -47,8 +44,6 @@ if __name__ == "__main__":
     file = f"./{filename}.txt"
     maze = read_input(file)
 
-    print(draw_maze(maze))
-
     ## I NEED TO SAVE THE DIRECTION I ARRIVED
     directions = [
         (1, 0), (-1, 0), (0, 1), (0, -1)
@@ -76,6 +71,8 @@ if __name__ == "__main__":
             possible_position_to_arrive_at_end.append(position)
 
     current_positions: list[Position] = possible_position_to_arrive_at_end.copy()
+
+    LEAFS = []
 
     turns = 0
     while len(current_positions) > 0:
@@ -109,6 +106,9 @@ if __name__ == "__main__":
                     next=position
                 )
 
+                if next_symbol == START:
+                    LEAFS.append(next_position)
+
                 should_continue_path = False
                 memo_key = (next_row, next_col)
                 if memo_key not in memo:
@@ -116,8 +116,11 @@ if __name__ == "__main__":
                     should_continue_path = True
                 else:
                     memo_position = memo[memo_key]
-                    if next_position.score < memo_position.score:
+                    if next_position.score <= memo_position.score:
                         memo[memo_key] = next_position
+                        should_continue_path = True
+                    # dont avoid path if only one direction change differs
+                    if next_position.score <= memo_position.score + 1000:
                         should_continue_path = True
 
                 if should_continue_path:
@@ -128,4 +131,17 @@ if __name__ == "__main__":
         turns += 1
 
     srow, scol = find_start(maze, START)
-    print(memo[(srow, scol)].score + 1000)
+    start_score = memo[(srow, scol)].score
+    print("PART ONE", start_score + 1000)
+
+    places_set = set()
+    for position in LEAFS:
+        if position.score > start_score:
+            continue
+        
+        while position.next is not None:
+            places_set.add((position.row, position.col))
+            maze[position.row][position.col] = "O"
+            position = position.next
+
+    print("PART TWO", len(places_set) + 1)
