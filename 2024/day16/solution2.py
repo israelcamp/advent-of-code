@@ -64,12 +64,15 @@ class Step:
 
 
 def calculate_step_score(step: Step, maze, memo: dict, score_so_far: int) -> int:
+    # if (step.row, step.col, step.drow, step.dcol) in step.visited:
+    #     return INF_SCORE
+
     step.visited.append((step.row, step.col, step.drow, step.dcol))
 
     global END_LOWEST_SCORE, ALREADY_ENDED
 
-    if ALREADY_ENDED and score_so_far > END_LOWEST_SCORE:
-        return INF_SCORE
+    # if ALREADY_ENDED and score_so_far > END_LOWEST_SCORE:
+    #     return INF_SCORE
 
     where_am_i = maze[step.row][step.col]
     if where_am_i == WALL:
@@ -80,8 +83,6 @@ def calculate_step_score(step: Step, maze, memo: dict, score_so_far: int) -> int
             ALREADY_ENDED = True
         return 0
     
-    
-
     possible_directions = find_next_directions((step.drow, step.dcol))
 
     where_can_i_go = [
@@ -116,9 +117,7 @@ def calculate_step_score(step: Step, maze, memo: dict, score_so_far: int) -> int
         step_score = calculate_step_score(
             Step(row, col, drow, dcol, visited=step.visited.copy(), previous=step), maze, memo, score_so_far + score
         )
-
         score += step_score
-
 
         results.append(score)
     min_score = min(results)
