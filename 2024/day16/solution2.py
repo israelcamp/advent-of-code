@@ -4,11 +4,13 @@ import sys
 sys.setrecursionlimit(10000)
 
 
-START = "S"
-END = "E"
+START = "E"  # "S"
+END = "S"  # "E"
 WALL = "#"
 FREE = "."
 INF_SCORE = 1_000_000_00
+END_LOWEST_SCORE: int = INF_SCORE
+ALREADY_ENDED: bool = False
 
 
 def read_input(file: str) -> list[list[str]]:
@@ -60,20 +62,20 @@ class Step:
         self.previous = previous
 
 
-RESULTS: list[int] = []
+def calculate_step_score(step: Step, maze, memo: dict, score_so_far: int) -> int:
 
+    global END_LOWEST_SCORE, ALREADY_ENDED
 
-def calculate_step_score(step: Step, maze, memo: dict) -> int:
-
-    # _memo = memo.get((step.row, step.col, step.drow, step.dcol), None)
-    # if _memo is None:
-    #     memo[(step.row, step.col, step.drow, step.dcol)] = []
-    # return _memo
+    if ALREADY_ENDED and score_so_far > END_LOWEST_SCORE:
+        return INF_SCORE
 
     where_am_i = maze[step.row][step.col]
     if where_am_i == WALL:
         return INF_SCORE
     if where_am_i == END:
+        if score_so_far < END_LOWEST_SCORE:
+            END_LOWEST_SCORE = score_so_far
+            ALREADY_ENDED = True
         return 0
 
     possible_directions = find_next_directions((step.drow, step.dcol))
@@ -118,12 +120,15 @@ def calculate_step_score(step: Step, maze, memo: dict) -> int:
             results.append(memo_value)
             continue
 
-        step_score = calculate_step_score(
-            Step(row, col, drow, dcol, previous=step), maze, memo
-        )
-        score = 1 + step_score
+        score = 1
         if (drow, dcol) != (step.drow, step.dcol):
             score += 1000
+
+        step_score = calculate_step_score(
+            Step(row, col, drow, dcol, previous=step), maze, memo, score_so_far + score
+        )
+
+        score += step_score
 
         memo[memo_key] = score
 
@@ -135,7 +140,7 @@ def calculate_step_score(step: Step, maze, memo: dict) -> int:
 
 
 if __name__ == "__main__":
-    file = "./sample2.txt"
+    file = "./input.txt"
     maze = read_input(file)
 
     print(draw_maze(maze))
@@ -143,7 +148,7 @@ if __name__ == "__main__":
     ## I NEED TO SAVE THE DIRECTION I ARRIVED
 
     start_row, start_col = find_start(maze)
-    start_direction = (0, -1)
+    start_direction = (0, 1)  # (0, -1)
     # row, col = start_row, start_col + 1
 
     start_step = Step(
@@ -154,7 +159,7 @@ if __name__ == "__main__":
         previous=None,
     )
     memo = {}
-    result = calculate_step_score(start_step, maze, memo)
+    result = calculate_step_score(start_step, maze, memo, 0)
     print(result)
 
     # for k, v in memo.items():
