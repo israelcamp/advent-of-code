@@ -93,14 +93,14 @@ def find_min_path(
             path_score = find_min_path(
                 next_row, next_col, maze, (drow, dcol), forward_visited, memo
             )
-        # print(next_place)
-        # print(next_row, next_col, path_score)
+
         score = 1
         if (drow, dcol) != current_direction:
             score += 1000
 
         r = score + path_score
         results.append(r)
+        break
 
     result = min(results)
 

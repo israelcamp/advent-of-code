@@ -4,8 +4,8 @@ import sys
 sys.setrecursionlimit(10000)
 
 
-START = "E"  # "S"
-END = "S"  # "E"
+START = "S"
+END = "E"
 WALL = "#"
 FREE = "."
 INF_SCORE = 1_000_000_00
@@ -54,15 +54,17 @@ def find_next_directions(current_direction: tuple[int, int]):
 
 
 class Step:
-    def __init__(self, row: int, col: int, drow: int, dcol: int, previous=None):
+    def __init__(self, row: int, col: int, drow: int, dcol: int, visited: list, previous=None):
         self.row = row
         self.col = col
         self.drow = drow
         self.dcol = dcol
+        self.visited = visited
         self.previous = previous
 
 
 def calculate_step_score(step: Step, maze, memo: dict, score_so_far: int) -> int:
+    step.visited.append((step.row, step.col, step.drow, step.dcol))
 
     global END_LOWEST_SCORE, ALREADY_ENDED
 
@@ -77,6 +79,8 @@ def calculate_step_score(step: Step, maze, memo: dict, score_so_far: int) -> int
             END_LOWEST_SCORE = score_so_far
             ALREADY_ENDED = True
         return 0
+    
+    
 
     possible_directions = find_next_directions((step.drow, step.dcol))
 
@@ -84,63 +88,54 @@ def calculate_step_score(step: Step, maze, memo: dict, score_so_far: int) -> int
         (step.row + drow, step.col + dcol, drow, dcol)
         for (drow, dcol) in possible_directions
     ]
-    previous_step: Step = step.previous
-    previous_len: int = 0
-    while previous_step is not None:
-        previous_point = (
-            previous_step.row,
-            previous_step.col,
-            previous_step.drow,
-            previous_step.dcol,
-        )
-        if previous_point in where_can_i_go:
-            where_can_i_go.remove(previous_point)
-
-        previous_len += 1
-        previous_step = previous_step.previous
+    where_can_i_go = [
+        x for x in where_can_i_go if x not in step.visited
+    ]
 
     if not len(where_can_i_go):
         return INF_SCORE
+    
+    memo_key = (
+        step.row,
+        step.col,
+        step.drow,
+        step.dcol,
+        *where_can_i_go
+    )
+    memo_value = memo.get(memo_key, None)
+    if memo_value is not None and memo_value < INF_SCORE:
+        return memo_value
 
     results = []
     for row, col, drow, dcol in where_can_i_go:
-        memo_key = (
-            step.row,
-            step.col,
-            step.drow,
-            step.dcol,
-            row,
-            col,
-            drow,
-            dcol,
-            previous_len,
-        )
-        memo_value = memo.get(memo_key, None)
-        if memo_value is not None:
-            results.append(memo_value)
-            continue
 
         score = 1
         if (drow, dcol) != (step.drow, step.dcol):
             score += 1000
 
         step_score = calculate_step_score(
-            Step(row, col, drow, dcol, previous=step), maze, memo, score_so_far + score
+            Step(row, col, drow, dcol, visited=step.visited.copy(), previous=step), maze, memo, score_so_far + score
         )
 
         score += step_score
 
-        memo[memo_key] = score
 
         results.append(score)
     min_score = min(results)
 
+    # if memo_value is not None and min_score != memo_value:
+    #     print("BAD MEMO", memo_key, "MV", memo_value, "MS", min_score)
+
+    memo[memo_key] = min_score
     # print("THIS STEP", step.row, step.col, step.drow, step.dcol, "SCORE", min_score)
     return min_score
 
 
 if __name__ == "__main__":
-    file = "./input.txt"
+    import sys
+    filename = sys.argv[1]
+
+    file = f"./{filename}.txt"
     maze = read_input(file)
 
     print(draw_maze(maze))
@@ -148,7 +143,7 @@ if __name__ == "__main__":
     ## I NEED TO SAVE THE DIRECTION I ARRIVED
 
     start_row, start_col = find_start(maze)
-    start_direction = (0, 1)  # (0, -1)
+    start_direction = (0, -1)
     # row, col = start_row, start_col + 1
 
     start_step = Step(
@@ -156,6 +151,7 @@ if __name__ == "__main__":
         col=start_col,
         drow=start_direction[0],
         dcol=start_direction[1],
+        visited=[],
         previous=None,
     )
     memo = {}
