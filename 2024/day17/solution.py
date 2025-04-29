@@ -83,13 +83,11 @@ def decide_operator(operation: int):
         return opcode7_cdv
 
 
-def solution_part_one(file):
-    register, instructions = read_input(file)
-
+def solution_part_one(register: Register, program: list[int]) -> list[int]:
     pointer = 0
     outs = []
-    while pointer < len(instructions):
-        commands = instructions[pointer : pointer + 2]
+    while pointer < len(program):
+        commands = program[pointer : pointer + 2]
 
         operation, operand = commands
 
@@ -107,6 +105,10 @@ def solution_part_one(file):
     return outs
 
 
+def reverted_op5(target_value: int) -> int:
+    return 8 * target_value
+
+
 if __name__ == "__main__":
     import sys
 
@@ -117,35 +119,42 @@ if __name__ == "__main__":
     # print(",".join([str(o) for o in outs_part_one]))
 
     register, instructions = read_input(file)
-    print(instructions[::2])
-    print(instructions[1::2])
-    sys.exit()
 
     # print(instructions)
+    register.A = 0
+    register.A = 3 * 8
     register.A = 24 * 8 + 32
     register.A = register.A * 8 + 8 * 5
     register.A = register.A * 8 + 8 * 3
     register.A = register.A * 8
     print(register)
-    # instructions = [0, 3]
 
-    pointer = 0
-    outs = []
-    while pointer < len(instructions):
-        commands = instructions[pointer : pointer + 2]
+    target_register = Register(A=0, B=0, C=0)
+    needed_runs = len(instructions)
+    program = instructions[:-2]
 
-        operation, operand = commands
+    operations = program[0::2]
+    operands = program[1::2]
 
-        if operation == 3 and register.A != 0:
-            pointer = operand
-            continue
+    for idx, current_out in enumerate(reversed(instructions)):
+        print("CURRENT TARGET", current_out)
+        for operation, operand in list(zip(operations, operands)):
 
-        combo = get_value_from_operand(operand, register)
-        operation = decide_operator(operation)
-        result = operation(combo, operand, register)
-        if result is not None:
-            outs.append(result)
+            if operation == 5:
+                v = reverted_op5(current_out)
+                if operand == 4:
+                    target_register.A += v
+                if operand == 5:
+                    target_register.B += v
+            if operation == 0:
+                combo = get_value_from_operand(operand, target_register)
+                v = target_register.A * (2**combo)
+                target_register.A = v
 
-        pointer += 2
-    print(register)
-    print(",".join([str(o) for o in outs]))
+            print("STEP", operation, operand)
+        # if idx == 1:
+        #     break
+
+    print(target_register)
+    outs = solution_part_one(target_register, instructions)
+    print("SOLUTION", outs)
