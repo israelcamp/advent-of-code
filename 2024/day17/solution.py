@@ -111,71 +111,17 @@ if __name__ == "__main__":
     filename = sys.argv[1]
     file = f"{filename}.txt"
 
-    # outs_part_one = solution_part_one(file)
-    # print(",".join([str(o) for o in outs_part_one]))
+    _, program = read_input(file)
 
-    register, instructions = read_input(file)
+    A = 0
+    for idx, target_output in enumerate(reversed(program)):
+        A *= 8
+        reg = Register(A=A, B=0, C=0)
+        offset = 0
+        while solution_part_one(reg, program) != program[-idx - 1 :]:
+            A += 1
+            reg = Register(A=A, B=0, C=0)
 
-    # print(instructions)
-    # register.A = 0
-    # register.A = 3 * 8 * 8
-    # register.A = (register.A + 4) * 8 * 8
-    # register.A = (register.A + 5) * 8 * 8
-    # register.A = (register.A + 3) * 8 * 8
-    # register.A = (register.A + 0) * 8 * 8
-    # register.A = (register.A + 3) * 8 * 8
-    # register.A = (register.A + 0) * 8 * 8
-    # register.A = register.A * 8 + 8 * 5
-    # register.A = register.A * 8 + 8 * 3
-    # register.A = register.A * 8
-    print(register)
-
-    target_register = Register(A=0, B=0, C=0)
-    needed_runs = len(instructions)
-    program = instructions[:-2]
-
-    operations = program[0::2]
-    operands = program[1::2]
-
-    for idx, current_out in enumerate(reversed(instructions)):
-        print("CURRENT TARGET", current_out)
-        iterator = list(zip(operations, operands))
-        iterator = reversed(iterator)
-        for operation, operand in iterator:
-
-            if operation == 5:
-                if operand == 4:
-                    target_register.A += current_out
-                if operand == 5:
-                    target_register.B += current_out
-
-            elif operation == 0:
-                combo = get_value_from_operand(operand, target_register)
-                v = target_register.A * (2**combo)
-                target_register.A = v
-
-            elif operation == 1:
-                ## operand will be 5 or 6
-                target_register.B = target_register.B ^ operand
-
-            elif operation == 2:
-                ## this will be A
-                combo = get_value_from_operand(operand, target_register)
-                target_register.B = combo % 8
-
-            elif operation == 4:
-                target_register.B = target_register.B ^ target_register.C
-
-            elif operation == 7:
-                combo = get_value_from_operand(operand, target_register)
-                v = target_register.A * (2**combo)
-                target_register.C = v
-
-            print("STEP", operation, operand, target_register)
-        # if idx == 0:
-        #     break
-
-    print(target_register)
-    outs = solution_part_one(target_register, instructions)
-    print("PROGRAM ", instructions)
-    print("SOLUTION", outs)
+    print(A)
+    print(solution_part_one(Register(A=A, B=0, C=0), program))
+    print(program)
