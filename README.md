@@ -8,4 +8,4 @@ I will not use any AI tools to generate code or solutions for the problems.
 
 ## 2024
 
-- Days done: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
+- Days done: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
