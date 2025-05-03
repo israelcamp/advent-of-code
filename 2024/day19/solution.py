@@ -10,6 +10,50 @@ def read_input(file: str):
     return available_options, wanted_combinations
 
 
+def solution_part_one(available, wanted):
+    possibles = []
+    for wanted_word in wanted:
+        current_words = {wanted_word}
+        full_match = False
+        while len(current_words) > 0:
+            next_words = set()
+            for current_word in current_words:
+                for option in available:
+                    if current_word.startswith(option):
+                        nw = current_word.removeprefix(option)
+                        if len(nw) == 0:
+                            full_match = True
+                        else:
+                            next_words.add(nw)
+
+            current_words = next_words.copy()
+            if full_match:
+                possibles.append(wanted_word)
+                break
+    return len(possibles)
+
+
+def n_ways_to_solve(target: str, available: list[str], memo: dict) -> int:
+
+    if target in memo:
+        return memo[target]
+
+    result = 0
+    for option in available:
+        if not target.endswith(option):
+            continue
+
+        next_target = target.removesuffix(option)
+        if next_target == "":  ## matched
+            result += 1
+
+        r = n_ways_to_solve(next_target, available, memo)
+        result += r
+    memo[target] = result
+
+    return result
+
+
 if __name__ == "__main__":
     import sys
 
@@ -18,35 +62,13 @@ if __name__ == "__main__":
 
     available, wanted = read_input(filename)
 
-    print(available)
-    print(wanted)
+    possibles = solution_part_one(available, wanted)
 
-    wanted_word = wanted[0]
-    # next_available = []
-    possibles = []
+    print("RESULT PART ONE", possibles)
+
+    memo = {}
+    result = 0
     for wanted_word in wanted:
-        current_words = set([wanted_word])
-        full_match = False
-        matches = 0
-        while len(current_words) > 0:
-            some_matched = False
-            next_words = set()
-            for current_word in current_words:
-                for option in available:
-                    if current_word.startswith(option):
-                        some_matched = True
-                        nw = current_word.removeprefix(option)
-                        if len(nw) == 0:
-                            matches += 1
-                            full_match = True
-                        else:
-                            next_words.add(nw)
+        result += n_ways_to_solve(wanted_word, available, memo)
 
-            current_words = next_words.copy()
-            # if matches > 0:
-            #     possibles.append((want))
-            if full_match:
-                possibles.append(wanted_word)
-                break
-
-    print(len(possibles), len(wanted))
+    print("RESULT PART TWO", result)
