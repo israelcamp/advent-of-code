@@ -90,15 +90,22 @@ if __name__ == "__main__":
         walls, N, start_row, start_col, target_row, target_col, memo
     )
 
+    print(memo)
+
     # print("\n".join("".join(row) for row in board))
     cheat_directions = [(0, 2), (0, -2), (2, 0), (-2, 0)]
     min_cheat = int(sys.argv[2])
 
     final_score = solution_step["score"]
+
+    print("FINAL", final_score)
+    print("MIN", min_cheat)
+    # sys.exit()
+
     step = solution_step
     matches = []
     while step is not None:
-        if step["score"] < final_score - min_cheat:
+        if step["score"] < min_cheat:
             step = step["next"]
             continue
 
@@ -108,21 +115,35 @@ if __name__ == "__main__":
             if next_row < 0 or next_row >= N or next_col < 0 or next_col >= N:
                 continue
 
-            if board[next_row][next_col] == "#" or (next_row, next_col) not in memo:
+            if board[next_row][next_col] == "#":
                 continue
 
             if board[next_row // 2][next_col // 2] != "#":
                 continue
 
-            memo_score = memo[(next_row, next_col)]
+            if (next_row, next_col) in memo:
+                next_score = memo[(next_row, next_col)]
+            # else:
+            #     next_score = solution_part_one(
+            #         walls, N, next_row, next_col, target_row, target_col, {}
+            #     )
+            #     print("HERE", next_score)
 
-            time_saved = step["score"] - memo_score - 2
-            if memo_score < step["score"] and time_saved >= min_cheat:
+            # if next_score is None:
+            #     continue
+
+            # if isinstance(next_score, dict):
+            #     next_score = next_score["score"]
+
+            # memo_score = memo[(next_row, next_col)]
+
+            time_saved = step["score"] - next_score - 2
+            if next_score <= step["score"] and time_saved >= min_cheat:
                 matches.append((row, col, next_row, next_col, time_saved))
 
         step = step["next"]
         # break
 
-    print(matches)
+    print(sorted(matches, key=lambda x: x[-1]))
     print(len(matches))
     # print(memo)
