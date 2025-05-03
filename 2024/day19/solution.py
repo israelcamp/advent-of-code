@@ -25,22 +25,28 @@ if __name__ == "__main__":
     # next_available = []
     possibles = []
     for wanted_word in wanted:
-        current_words = [wanted_word]
+        current_words = set([wanted_word])
         full_match = False
+        matches = 0
         while len(current_words) > 0:
             some_matched = False
-            next_words = []
+            next_words = set()
             for current_word in current_words:
                 for option in available:
                     if current_word.startswith(option):
                         some_matched = True
                         nw = current_word.removeprefix(option)
-                        next_words.append(nw)
                         if len(nw) == 0:
+                            matches += 1
                             full_match = True
+                        else:
+                            next_words.add(nw)
 
-            current_words = next_words
+            current_words = next_words.copy()
+            # if matches > 0:
+            #     possibles.append((want))
             if full_match:
                 possibles.append(wanted_word)
                 break
-    print(len(possibles), possibles)
+
+    print(len(possibles), len(wanted))
