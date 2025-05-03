@@ -61,6 +61,55 @@ def solve_race(
     return SOLUTION_STEP
 
 
+def find_next_points(board, start_row: int, start_col: int, current_row: int, current_col: int, current_step:int, max_step: int, start_score: int, min_score: int, N: int, visited:list, directions, memo: dict, memo_cheats: set):
+    
+    if current_step > max_step: ## TODO: maybe I will be off by one
+        return 0
+
+    visited.append((current_row, current_col))
+
+    paths = 0
+    for drow, dcol in directions:
+        next_row, next_col = current_row + drow, current_col + dcol
+
+        if next_row < 0 or next_row >= N or next_col < 0 or next_col >= N:
+                continue
+        
+        if (next_row, next_col) in visited:
+            continue
+
+        next_symbol = board[next_row][next_col]
+        if next_symbol != "#":
+            next_score = memo[(next_row, next_col)]
+            time_saved = start_score - next_score - current_step
+            if time_saved >= min_score:
+                memo_cheats.add((start_row, start_col, next_row, next_col))
+                paths += 1
+
+        paths += find_next_points(
+            board=board,
+            start_row=start_row,
+            start_col=start_col,
+            current_row=next_row,
+            current_col=next_col,
+            current_step=current_step + 1,
+            max_step=max_step,
+            start_score=start_score,
+            min_score=min_score,
+            N=N,
+            directions=directions,
+            visited=visited.copy(),
+            memo=memo,
+            memo_cheats=memo_cheats
+        )
+
+    return paths
+
+
+def manhatan_distance(x: int, y: int, x1: int, y1: int) -> int:
+    return abs(x - x1) + abs(y - y1)
+
+
 if __name__ == "__main__":
     import sys
 
@@ -87,13 +136,14 @@ if __name__ == "__main__":
         walls, N, start_row, start_col, target_row, target_col, memo
     )
 
-    cheat_directions = [(0, 2), (0, -2), (2, 0), (-2, 0)]
+    cheat_directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
     min_cheat = int(sys.argv[2])
 
     final_score = solution_step["score"]
 
     step = solution_step
     matches = set()
+    memo_cheats = set()
     while step is not None:
         row, col = step["row"], step["col"]
 
@@ -107,19 +157,22 @@ if __name__ == "__main__":
             if next_row < 0 or next_row >= N or next_col < 0 or next_col >= N:
                 continue
 
-            if board[next_row][next_col] == "#":
+            if board[next_row][next_col] != "#": ## only starts right before walls
                 continue
 
-            if board[row + drow // 2][col + dcol // 2] != "#":
+            cheat_row, cheat_col = next_row + drow, next_col + dcol
+            if next_row < 0 or next_row >= N or next_col < 0 or next_col >= N:
                 continue
 
-            if (next_row, next_col) in memo:
-                next_score = memo[(next_row, next_col)]
-
-            time_saved = step["score"] - next_score - 2 ## 2 because it takes 2 picoseconds to get there
-            if next_score <= step["score"] and time_saved >= min_cheat:
-                matches.add((row, col, next_row, next_col))
-
+            possible_ends = [
+                (r, c, s) for (r,c), s in memo.items() if manhatan_distance(r, c, cheat_row, cheat_col) <= 18
+            ]
+            for r, c, s in possible_ends:
+                time_saved = step["score"] - s - manhatan_distance(r, c, row, col)
+                if time_saved >= min_cheat:
+                    memo_cheats.add((row, col, r, c))
+        
         step = step["next"]
 
-    print(len(matches))
+    # print(memo_cheats)
+    print(len(memo_cheats))
