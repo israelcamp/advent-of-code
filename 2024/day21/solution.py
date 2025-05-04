@@ -25,7 +25,7 @@ MOVEMENTS = {
     (1, 0): "v",
     (0, -1): "<",
     (0, 1): ">",
-    (0,0): ""
+    (0, 0): ""
 }
 
 DIRPAD = {
@@ -34,7 +34,7 @@ DIRPAD = {
     "<": (1, 0),
     "v": (1, 1),
     ">": (1, 2),
-    "#": (0,0)
+    "#": (0, 0)
 }
 
 def solve_sequence(start_button: str, pos_dict: dict, current_sequence: str) -> str:
@@ -53,13 +53,12 @@ def solve_sequence(start_button: str, pos_dict: dict, current_sequence: str) -> 
         direction_row = distance_row // row_norm
         direction_col = distance_col // col_norm
 
-        next_row = start_position[0] + distance_row
-        if inverted_pos_dict[(next_row, 0)] == "#":
+        if inverted_pos_dict[(next_position[0], 0)] == "#":
             preference = "col"
-        elif inverted_pos_dict[(0, start_position[1] + distance_col)] == "#":
+        elif inverted_pos_dict[(0, next_position[1])] == "#":
             preference = "row"
         else:
-            preference = "col"
+            preference = "row"
 
         if preference == "row":
             movement_sequence += row_norm * MOVEMENTS[(direction_row, 0)] + col_norm * MOVEMENTS[(0, direction_col)]
@@ -79,7 +78,8 @@ if __name__ == "__main__":
     filename = f"{_filename}.txt"
 
     sequences = read_input(filename)
-    current_sequence = sequences[0]
+    
+    sequences = [sequences[-1]]
 
 
     results = 0
@@ -90,7 +90,9 @@ if __name__ == "__main__":
         print(len(robot2_sequence), "".join(current_sequence))
         results += len(robot2_sequence) * int("".join(current_sequence[:-1]))
 
+        # break
+
     print(results)
-    # print(robot2_sequence)
-    # print(robot1_sequence)
-    # print(numpad_sequence)
+    print(robot2_sequence)
+    print(robot1_sequence)
+    print(numpad_sequence)
