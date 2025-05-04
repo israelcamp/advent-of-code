@@ -65,20 +65,10 @@ def solve_sequence(current_button: str, next_button: str, pos_dict: dict) -> set
     return possible_paths
 
 
-def solve_robot2(sequence: str):
-    current_sequence = "A" + sequence
-    result = 0
-    for i in range(0, len(current_sequence) - 1):
-        current_button = current_sequence[i]
-        next_button = current_sequence[i + 1]
-        possible_paths = solve_sequence(
-            current_button=current_button, next_button=next_button, pos_dict=DIRPAD
-        )
-        result += min(len(p) for p in possible_paths)
-    return result
+def solve_robot1(sequence: str, robot_number: int, max_robots: int, memo: dict) -> int:
 
-
-def solve_robot1(sequence: str) -> int:
+    if (sequence, robot_number) in memo:
+        return memo[(sequence, robot_number)]
 
     current_sequence = "A" + sequence
     result = 0
@@ -91,11 +81,15 @@ def solve_robot1(sequence: str) -> int:
 
         solutions = []
         for path in possible_paths:
-            _solution = solve_robot2(path)
+            if robot_number >= max_robots:
+                _solution = len(path)
+            else:
+                _solution = solve_robot1(path, robot_number + 1, max_robots, memo)
             solutions.append(_solution)
 
         result += min(solutions)
 
+    memo[(sequence, robot_number)] = result
     return result
 
 
@@ -104,12 +98,14 @@ if __name__ == "__main__":
     import sys
 
     _filename = sys.argv[1]
+    max_robots = int(sys.argv[2])
     filename = f"{_filename}.txt"
 
     sequences = read_input(filename)
 
     global_result = 0
 
+    memo = {}
     for sequence in sequences:
         current_sequence = ["A"] + sequence
         result = 0
@@ -122,7 +118,9 @@ if __name__ == "__main__":
 
             solutions = []
             for path in possible_paths0:
-                _solution = solve_robot1(path)
+                _solution = solve_robot1(
+                    path, robot_number=1, max_robots=max_robots, memo=memo
+                )
                 solutions.append(_solution)
 
             result += min(solutions)
