@@ -44,35 +44,25 @@ if __name__ == "__main__":
                     continue
                 connections[current].add(other)
 
-    # result_one = solution_part_one(connections)
+    result_one = solution_part_one(connections)
+    print("PART ONE")
 
     all_names = list(connections.keys())
     biggest_set = None
     biggest_len = 0
 
-    current_set_connections = twoset_connections
-    while True:
-        next_set_connections = []
-        for name, name_connections in connections.items():
-            for con_set in current_set_connections:
-                if not all(x in name_connections for x in con_set):
+    name = "ka"
+    name_conns = list(connections["ka"])
+    for name, name_conns in connections.items():
+        for n_name in name_conns:
+            this_set = [name, n_name]
+            for no_name in name_conns:
+                if no_name == n_name:  ## skip the current oin analysis
                     continue
-                this_set = con_set.union({name})
-                if this_set in next_set_connections:
-                    continue
-                next_set_connections.append(this_set)
+                no_name_conns = connections[no_name]
+                if all(x in no_name_conns for x in this_set):
+                    this_set.append(no_name)
+            if len(this_set) > biggest_len:
+                biggest_len, biggest_set = len(this_set), this_set
 
-        if len(next_set_connections) > 0:
-            current_set_connections = next_set_connections
-            continue
-        else:
-            break
-
-    print(current_set_connections)
-
-    # starts_with_t = 0
-    # for tc in next_set_connections:
-    #     starts_with_t += any(name.startswith("t") for name in tc)
-    # print(starts_with_t)
-
-    # print(biggest_len, biggest_set)``
+    print("PART TWO", ",".join(sorted(biggest_set)))
