@@ -141,19 +141,19 @@ def complete_vars_for_z(
 
     previous_x = get_wire_string("x", wanted_index - 1)
     previous_y = get_wire_string("y", wanted_index - 1)
-    previous_or_output_var = None
-    previous_xy_xor_output_var = None
+    previous_c1 = None
+    previous_a1 = None
     for top in previous_influence_operations:
         if top[1] == "OR":
-            previous_or_output_var = top[-1]
+            previous_c1 = top[-1]
         if set(top[:-1]) == {previous_x, previous_y, "XOR"}:
-            previous_xy_xor_output_var = top[-1]
+            previous_a1 = top[-1]
 
     target_x = get_wire_string("x", wanted_index)
     target_y = get_wire_string("y", wanted_index)
-    a1_vars = {previous_x, previous_y, "AND"}
-    a2_vars = {target_x, target_y, "XOR"}
-    b1_vars = {previous_or_output_var, previous_xy_xor_output_var, "AND"}
+    a1_vars = {target_x, target_y, "XOR"}
+    a2_vars = {previous_x, previous_y, "AND"}
+    b1_vars = {previous_c1, previous_a1, "AND"}
 
     a1, a2, b1 = None, None, None
     for top in target_influence_operations:
@@ -165,34 +165,33 @@ def complete_vars_for_z(
         elif left_side_vars == b1_vars:
             b1 = top[-1]
 
-    if a1 is None:
-        possible_changes = []
-        for other_op in operations:
-            left_side_vars = set(other_op[:-1])
-            if left_side_vars == a1_vars:
-                possible_changes.append(other_op)
-        to_swap_op = possible_changes[0]
-        operations.remove(to_swap_op)
-
     # assert a1 is not None
-    assert a2 is not None
-    assert b1 is not None
+    # assert a2 is not None
+    # assert b1 is not None
 
-    c1_vars = {b1, a1, "OR"}
+    c1_vars = {b1, a2, "OR"}
     c1 = None
     for top in target_influence_operations:
         left_side_vars = set(top[:-1])
         if left_side_vars == c1_vars:
             c1 = top[-1]
 
-    assert c1 is not None
+    # assert c1 is not None
 
-    z_vars = {c1, a2, "XOR"}
+    z_vars = {c1, a1, "XOR"}
     z = None
     for top in target_influence_operations:
         left_side_vars = set(top[:-1])
         if left_side_vars == z_vars:
             z = top[-1]
+
+    return {
+        "a1": a1,
+        "a2": a2,
+        "b1": b1,
+        "c1": c1,
+        "z": z
+    }
 
     if z is None:
         target_wire = target
@@ -245,8 +244,8 @@ if __name__ == "__main__":
 
     fixed = [8]
     swapped_wires = []
-    for idx in fixed:
-        complete_vars_for_z(idx, z_sets, operations, swapped_wires)
+    # for idx in fixed:
+    #     previous_vars = complete_vars_for_z(idx, z_sets, operations, swapped_wires)
     print("SWAPPED", swapped_wires)
     # wanted_index = 4
     # while wanted_index < N:
@@ -258,59 +257,84 @@ if __name__ == "__main__":
 
     # complete_vars_for_z(9, z_sets, operations, swapped_wires)
 
-    wanted_index = 9
-    target = f"z{str(wanted_index).zfill(2)}"
-    previous = f"z{str(wanted_index-1).zfill(2)}"
-    previous_previous = f"z{str(wanted_index-2).zfill(2)}"
+    wanted_index = 11
+    target_z = f"z{str(wanted_index).zfill(2)}"
+    previous_z = f"z{str(wanted_index-1).zfill(2)}"
+    previous_previous_z = f"z{str(wanted_index-2).zfill(2)}"
 
     target_influence_operations = find_operations_from_vars(
-        z_sets[target] - z_sets[previous], operations
+        z_sets[target_z] - z_sets[previous_z], operations
     )
     for o in target_influence_operations:
         print(o)
     previous_influence_operations = find_operations_from_vars(
-        z_sets[previous] - z_sets[previous_previous], operations
+        z_sets[previous_z] - z_sets[previous_previous_z], operations
     )
 
     previous_x = get_wire_string("x", wanted_index - 1)
     previous_y = get_wire_string("y", wanted_index - 1)
-    previous_or_output_var = None
-    previous_xy_xor_output_var = None
+    previous_c1 = None
+    previous_a1 = None
     for top in previous_influence_operations:
         if top[1] == "OR":
-            previous_or_output_var = top[-1]
+            previous_c1 = top[-1]
         if set(top[:-1]) == {previous_x, previous_y, "XOR"}:
-            previous_xy_xor_output_var = top[-1]
+            previous_a1 = top[-1]
 
-    print(previous_or_output_var, previous_xy_xor_output_var)
+    print(previous_c1, previous_a1)
 
     target_x = get_wire_string("x", wanted_index)
     target_y = get_wire_string("y", wanted_index)
-    a1_vars = {previous_x, previous_y, "AND"}
-    a2_vars = {target_x, target_y, "XOR"}
-    b1_vars = {previous_or_output_var, previous_xy_xor_output_var, "AND"}
-
-    a1, a2, b1 = None, None, None
-    for top in target_influence_operations:
-        left_side_vars = set(top[:-1])
-        if left_side_vars == a1_vars:
+    
+    # lets find the value for a1
+    a1_vars = {target_x, target_y, "XOR"}
+    a1 = None
+    for top in operations:
+        if set(top[:-1]) == a1_vars:
             a1 = top[-1]
-        elif left_side_vars == a2_vars:
+    print(f"{a1=}")
+
+    # lets find a2
+    a2_vars = {previous_x, previous_y, "AND"}
+    a2 = None
+    for top in operations:
+        if set(top[:-1]) == a2_vars:
             a2 = top[-1]
-        elif left_side_vars == b1_vars:
+    print(f"{a2=}")
+
+    # lets find b1
+    b1_vars = {previous_c1, previous_a1, "AND"}
+    b1 = None
+    for top in operations:
+        if set(top[:-1]) == b1_vars:
             b1 = top[-1]
+    print(f"{b1=}")
 
-    c1_vars = {b1, a1, "OR"}
+    # lets find c1
+    c1_vars = {b1, "OR", a2}
     c1 = None
-    for top in target_influence_operations:
-        left_side_vars = set(top[:-1])
-        if left_side_vars == c1_vars:
+    for top in operations:
+        if set(top[:-1]) == c1_vars:
             c1 = top[-1]
+    print(f"{c1=}")
 
-    z_vars = {c1, a2, "XOR"}
-    z = None
-    for top in target_influence_operations:
-        left_side_vars = set(top[:-1])
-        if left_side_vars == z_vars:
-            z = top[-1]
-    print(f"{a1=} {a2=} {b1=} {c1=} {z=}")
+    # so now lets find the c1 XOR a1 that should produce z
+    c1_xor_a1_vars = {c1, "XOR", a1}
+    c1_xor_a1_out = None
+    for top in operations:
+        if set(top[:-1]) == c1_xor_a1_vars:
+            c1_xor_a1_out = top[-1]
+    print(f"{c1_xor_a1_out=}")
+
+    if c1_xor_a1_out != target:
+        ## lets find the target op
+        bad_op = None
+        for top in operations:
+            if top[-1] == target_z:
+                bad_op = top
+                break
+
+        print(bad_op)
+    # influenced_vars = complete_vars_for_z(wanted_index, z_sets, operations, [])
+    # print(influenced_vars)
+    # print(f"{a1=} {a2=} {b1=} {c1=} {z=}")
