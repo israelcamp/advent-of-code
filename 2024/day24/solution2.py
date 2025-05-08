@@ -125,7 +125,9 @@ def get_wire_string(n: str, v: int):
     return f"{n}{str(v).zfill(2)}"
 
 
-def complete_vars_for_z(wanted_index: int, z_sets: dict, operations: list):
+def complete_vars_for_z(
+    wanted_index: int, z_sets: dict, operations: list, swapped: list
+):
     target = f"z{str(wanted_index).zfill(2)}"
     previous = f"z{str(wanted_index-1).zfill(2)}"
     previous_previous = f"z{str(wanted_index-2).zfill(2)}"
@@ -163,7 +165,16 @@ def complete_vars_for_z(wanted_index: int, z_sets: dict, operations: list):
         elif left_side_vars == b1_vars:
             b1 = top[-1]
 
-    assert a1 is not None
+    if a1 is None:
+        possible_changes = []
+        for other_op in operations:
+            left_side_vars = set(other_op[:-1])
+            if left_side_vars == a1_vars:
+                possible_changes.append(other_op)
+        to_swap_op = possible_changes[0]
+        operations.remove(to_swap_op)
+
+    # assert a1 is not None
     assert a2 is not None
     assert b1 is not None
 
@@ -184,28 +195,37 @@ def complete_vars_for_z(wanted_index: int, z_sets: dict, operations: list):
             z = top[-1]
 
     if z is None:
-        possible_changes = []
-        for other_op in operations:
-            left_side_vars = set(other_op[:-1])
-            if left_side_vars == z_vars:
-                possible_changes.append(other_op)
-        swap_op = possible_changes[0]
-        operations.remove(swap_op)
+        target_wire = target
+        target_left_vars = z_vars
 
-        # now lets find the operation ending in z = target
-        possible_changes = []
-        for other_op in operations:
-            if other_op[-1] == target:
-                possible_changes.append(other_op)
-        zswap = possible_changes[0]
-        operations.remove(zswap)
+        swapped_wires = swap_outputs_z(target_wire, target_left_vars, operations)
+        swapped += swapped_wires
 
-        new_zop = swap_op[:-1] + (target,)
-        new_sop = zswap[:-1] + (swap_op[-1],)
 
-        operations.append(new_zop)
-        operations.append(new_sop)
-        return [target, swap_op[-1]]
+def swap_outputs_z(target_wire: str, target_left_vars: set, operations: list):
+    # find the other wire
+    possible_changes = []
+    for other_op in operations:
+        left_side_vars = set(other_op[:-1])
+        if left_side_vars == target_left_vars:
+            possible_changes.append(other_op)
+    to_swap_op = possible_changes[0]
+    operations.remove(to_swap_op)
+
+    # now lets find the operation ending in z = target
+    possible_changes = []
+    for other_op in operations:
+        if other_op[-1] == target_wire:
+            possible_changes.append(other_op)
+    target_swap = possible_changes[0]
+    operations.remove(target_swap)
+
+    n1 = to_swap_op[:-1] + (target_wire,)
+    n2 = target_swap[:-1] + (to_swap_op[-1],)
+
+    operations.append(n1)
+    operations.append(n2)
+    return [target_wire, to_swap_op[-1]]
 
 
 if __name__ == "__main__":
@@ -226,9 +246,8 @@ if __name__ == "__main__":
     fixed = [8]
     swapped_wires = []
     for idx in fixed:
-        swp = complete_vars_for_z(idx, z_sets, operations)
-        if isinstance(swp, list):
-            swapped_wires += swp
+        complete_vars_for_z(idx, z_sets, operations, swapped_wires)
+    print("SWAPPED", swapped_wires)
     # wanted_index = 4
     # while wanted_index < N:
     #     print(wanted_index)
@@ -236,6 +255,8 @@ if __name__ == "__main__":
     #     wanted_index += 1
 
     # sys.exit()
+
+    # complete_vars_for_z(9, z_sets, operations, swapped_wires)
 
     wanted_index = 9
     target = f"z{str(wanted_index).zfill(2)}"
@@ -292,4 +313,4 @@ if __name__ == "__main__":
         left_side_vars = set(top[:-1])
         if left_side_vars == z_vars:
             z = top[-1]
-    print(a1, b1, a2, c1, z)
+    print(f"{a1=} {a2=} {b1=} {c1=} {z=}")
