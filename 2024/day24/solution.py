@@ -1,5 +1,16 @@
+# DAY 24 CONQUERED
+# THIS WAS NOT EASY, I COULD NOT SLEEP UNTIL I UNDERSTOOD THIS MF
+# I took an approach base on TDD
+# After many hours, I undestood that there was a pattern to the wires and operations
+# Then I create a function that validates if the pattern is being followed
+# When the pattern broke I stopped and try to make some dirty function to fix it and move on
+# Then I ran again until the next error, that is why you will see some asserts and raise in the `fix_wire` function
+# Those are cases that I thought could come up, but after I fixed the first two errors everything else passed
+# So I guess TDD works? Do not tell my manager.
+
+
 from pathlib import Path
-from itertools import product, permutations
+from collections import namedtuple
 
 
 def read_input(file: str):
@@ -99,8 +110,12 @@ def get_wire_string(n: str, v: int):
     return f"{n}{str(v).zfill(2)}"
 
 
-def is_valid(wanted_index: int, operations: list):
-    target_z = get_wire_string("z", wanted_index)
+ImportantVars = namedtuple(
+    "ImportantVars", ("a1", "a2", "b1", "c1", "z", "prev_a1", "prev_c1")
+)
+
+
+def get_important_vars(wanted_index: int, operations: list) -> ImportantVars:
     previous_z = get_wire_string("z", wanted_index - 1)
     previous_previous_z = get_wire_string("z", wanted_index - 2)
 
@@ -147,8 +162,13 @@ def is_valid(wanted_index: int, operations: list):
     z_vars = {c1, "XOR", a1}
     z_op = get_op_from_vars(z_vars, operations)
     z = z_op[-1] if z_op is not None else None
+    return ImportantVars(a1, a2, b1, c1, z, previous_a1, previous_c1)
 
-    return z == target_z, a1, c1, previous_a1, previous_c1
+
+def is_valid(wanted_index: int, operations: list):
+    target_z = get_wire_string("z", wanted_index)
+    vars: ImportantVars = get_important_vars(wanted_index, operations)
+    return vars.z == target_z
 
 
 def get_op_from_vars(vars: set, operations: list):
@@ -167,58 +187,14 @@ def get_op_from_out(out: str, operations: list):
 
 def fix_wire(wanted_index: int, operations: list):
     target_z = get_wire_string("z", wanted_index)
-    previous_z = get_wire_string("z", wanted_index - 1)
-    previous_previous_z = get_wire_string("z", wanted_index - 2)
+    vars: ImportantVars = get_important_vars(wanted_index, operations)
 
-    prev_influenced_vars = find_influence_wires(previous_z)
-    prev_prev_influenced_vars = find_influence_wires(previous_previous_z)
-    previous_influence_operations = find_operations_from_vars(
-        prev_influenced_vars - prev_prev_influenced_vars, operations
-    )
-
-    previous_x = get_wire_string("x", wanted_index - 1)
-    previous_y = get_wire_string("y", wanted_index - 1)
-    previous_c1 = None
-    previous_a1 = None
-    for top in previous_influence_operations:
-        if top[1] == "OR":
-            previous_c1 = top[-1]
-        if set(top[:-1]) == {previous_x, previous_y, "XOR"}:
-            previous_a1 = top[-1]
-
-    target_x = get_wire_string("x", wanted_index)
-    target_y = get_wire_string("y", wanted_index)
-
-    # lets find the value for a1
-    a1_vars = {target_x, target_y, "XOR"}
-    a1_op = get_op_from_vars(a1_vars, operations)
-    a1 = a1_op[-1] if a1_op is not None else None
-
-    # lets find a2
-    a2_vars = {previous_x, previous_y, "AND"}
-    a2_op = get_op_from_vars(a2_vars, operations)
-    a2 = a2_op[-1] if a2_op is not None else None
-
-    # lets find b1
-    b1_vars = {previous_c1, previous_a1, "AND"}
-    b1_op = get_op_from_vars(b1_vars, operations)
-    b1 = b1_op[-1] if b1_op is not None else None
-
-    # lets find c1
-    c1_vars = {b1, "OR", a2}
-    c1_op = get_op_from_vars(c1_vars, operations)
-    c1 = c1_op[-1] if c1_op is not None else None
-
-    # so now lets find the c1 XOR a1 that should produce z
-    z_vars = {c1, "XOR", a1}
-    z_op = get_op_from_vars(z_vars, operations)
-    z = z_op[-1] if z_op is not None else None
+    a1, a2, b1, c1, z, *_ = vars
 
     assert all(v is not None for v in (a1, a2, b1, c1))
     if z is None:
         target_z_op = get_op_from_out(target_z, operations)
         target_z_vars = {target_z_op[0], target_z_op[2]}
-
         if c1 not in target_z_vars and a1 in target_z_vars:
             need_to_swap = {c1}.union(target_z_vars - {a1})
         elif a1 not in target_z_vars and c1 in target_z_vars:
@@ -257,7 +233,7 @@ if __name__ == "__main__":
     N = 45
     swapped_vars = []
     for idx in range(4, N):
-        valid, *vars = is_valid(idx, operations)
+        valid = is_valid(idx, operations)
         if not valid:
             swapped = fix_wire(idx, operations)
             swapped_vars += swapped
