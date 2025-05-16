@@ -13,3 +13,10 @@ I will not use any AI tools to generate code or solutions for the problems.
 *AOC 2024 COMPLETED!*
 
 Maybe I will go back to previous years and solve them too, but not for now.
+
+## 2023
+
+I have decided that I will do challenges from 2023 from time to time.
+I will do them in other language than Python, probably Lua.
+
+- Days done: 1
