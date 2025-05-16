@@ -19,4 +19,4 @@ Maybe I will go back to previous years and solve them too, but not for now.
 I have decided that I will do challenges from 2023 from time to time.
 I will do them in other language than Python, probably Lua.
 
-- Days done: 1
+- Days done: 1, 2
