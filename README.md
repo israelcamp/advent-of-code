@@ -19,6 +19,6 @@ Maybe I will go back to previous years and solve them too, but not for now.
 I have decided that I will do challenges from 2023 from time to time.
 I will do them in other language than Python, probably Lua.
 
-- Days done: 1, 2, 3, 4, 5, 6
+- Days done: 1, 2, 3, 4, 5, 6, 7
 
 I confess I used GPT-o4-mini-high to solve day 5 part 2, part 1 was done all by myself, but I wanted to see how far I could go with the AI, could it solve AOC problems?,
